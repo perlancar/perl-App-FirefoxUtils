@@ -51,6 +51,7 @@ sub _do_firefox {
     } elsif ($which eq 'terminate') {
         kill KILL => @$pids;
     }
+    [200, "OK", "", {"func.pids" => $pids}];
 }
 
 $SPEC{pause_firefox} = {
