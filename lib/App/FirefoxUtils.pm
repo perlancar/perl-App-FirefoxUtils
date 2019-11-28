@@ -38,7 +38,7 @@ sub _do_firefox {
             if ($args{users} && @{ $args{users} }) {
                 return 0 unless grep { $p->{uid} == $_ } @{ $args{users} };
             }
-            return 0 unless $p->{fname} =~ /\A(Web Content|firefox-bin)\z/;
+            return 0 unless $p->{fname} =~ /\A(Web Content|WebExtensions|firefox-bin)\z/;
             log_trace "Found PID %d (cmdline=%s, fname=%s, uid=%d)", $p->{pid}, $p->{cmndline}, $p->{fname}, $p->{uid};
             1;
         },
