@@ -1,3 +1,8 @@
+0.004   2019-11-29  Released-By: PERLANCAR; Urgency: medium
+
+	- Add CLI's: firefox-is-paused, ps-firefox.
+
+
 0.003   2019-11-28  Released-By: PERLANCAR; Urgency: medium
 
         - [build] Rebuild with updated Data::Sah (0.902) which has adjusted with
