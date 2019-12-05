@@ -172,3 +172,5 @@ L<App::DumpFirefoxHistory>).
 L<App::ChromeUtils>
 
 L<App::OperaUtils>
+
+L<App::VivaldiUtils>
