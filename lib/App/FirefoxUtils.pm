@@ -33,6 +33,7 @@ sub ps_firefox {
 $SPEC{pause_firefox} = {
     v => 1.1,
     summary => "Pause (kill -STOP) Firefox",
+    description => $App::BrowserUtils::desc_pause,
     args => {
        %App::BrowserUtils::args_common,
     },
