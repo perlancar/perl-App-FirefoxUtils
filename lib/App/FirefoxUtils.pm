@@ -70,6 +70,26 @@ sub firefox_is_paused {
     App::BrowserUtils::_do_browser('is_paused', 'firefox', @_);
 }
 
+$SPEC{firefox_is_running} = {
+    v => 1.1,
+    summary => "Check whether Firefox is running",
+    description => <<'_',
+
+Firefox is defined as running if there are some Firefox processes that are *not*
+in 'stop' state. In other words, if Firefox has been started but is currently
+paused, we do not say that it's running. If you want to check if Firefox process
+exists, you can use `ps_firefox`.
+
+_
+    args => {
+        %App::BrowserUtils::args_common,
+        %App::BrowserUtils::argopt_quiet,
+    },
+};
+sub firefox_is_running {
+    App::BrowserUtils::_do_browser('is_running', 'firefox', @_);
+}
+
 $SPEC{terminate_firefox} = {
     v => 1.1,
     summary => "Terminate  (kill -KILL) Firefox",
