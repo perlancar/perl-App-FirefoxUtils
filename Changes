@@ -1,3 +1,8 @@
+0.010   2020-04-19  Released-By: PERLANCAR; Urgency: medium
+
+	- Add CLI: firefox-is-running.
+
+
 0.009   2020-04-18  Released-By: PERLANCAR; Urgency: medium
 
 	- Add CLI: list-firefox-profiles.
