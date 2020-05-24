@@ -1,3 +1,8 @@
+0.012   2020-05-24  Released-By: PERLANCAR; Urgency: medium
+
+	- Add CLI: get-firefox-profile-dir.
+
+
 0.011   2020-05-24  Released-By: PERLANCAR; Urgency: low
 
 	- No functional changes.
