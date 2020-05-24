@@ -116,7 +116,7 @@ This distribution includes several utilities related to Firefox:
 =head1 SEE ALSO
 
 Some other CLI utilities related to Firefox: L<dump-firefox-history> (from
-L<App::DumpFirefoxHistory>).
+L<App::DumpFirefoxHistory>), L<App::FirefoxMultiAccountContainersUtils>.
 
 L<App::ChromeUtils>
 
