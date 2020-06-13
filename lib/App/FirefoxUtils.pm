@@ -53,6 +53,18 @@ sub unpause_firefox {
     App::BrowserUtils::_do_browser('unpause', 'firefox', @_);
 }
 
+$SPEC{firefox_has_processes} = {
+    v => 1.1,
+    summary => "Check whether Firefox has processes",
+    args => {
+        %App::BrowserUtils::args_common,
+        %App::BrowserUtils::argopt_quiet,
+    },
+};
+sub firefox_has_processes {
+    App::BrowserUtils::_do_browser('has_processes', 'firefox', @_);
+}
+
 $SPEC{firefox_is_paused} = {
     v => 1.1,
     summary => "Check whether Firefox is paused",
@@ -99,6 +111,36 @@ $SPEC{terminate_firefox} = {
 };
 sub terminate_firefox {
     App::BrowserUtils::_do_browser('terminate', 'firefox', @_);
+}
+
+$SPEC{restart_firefox} = {
+    v => 1.1,
+    summary => "Restart firefox",
+    args => {
+        %App::BrowserUtils::argopt_firefox_cmd,
+        %App::BrowserUtils::argopt_quiet,
+    },
+    features => {
+        dry_run => 1,
+    },
+};
+sub restart_firefox {
+    App::BrowserUtils::restart_browsers(@_, restart_firefox=>1);
+}
+
+$SPEC{start_firefox} = {
+    v => 1.1,
+    summary => "Start firefox if not already started",
+    args => {
+        %App::BrowserUtils::argopt_firefox_cmd,
+        %App::BrowserUtils::argopt_quiet,
+    },
+    features => {
+        dry_run => 1,
+    },
+};
+sub start_firefox {
+    App::BrowserUtils::start_browsers(@_, start_firefox=>1);
 }
 
 1;
