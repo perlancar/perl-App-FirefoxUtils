@@ -1,14 +1,14 @@
 package App::FirefoxUtils;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010001;
 use strict 'subs', 'vars';
 use warnings;
 use Log::ger;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our %SPEC;
 
@@ -51,6 +51,19 @@ $SPEC{unpause_firefox} = {
 };
 sub unpause_firefox {
     App::BrowserUtils::_do_browser('unpause', 'firefox', @_);
+}
+
+$SPEC{pause_and_unpause_firefox} = {
+    v => 1.1,
+    summary => "Pause and unpause Firefox alternately",
+    description => $App::BrowserUtils::desc_pause_and_unpause,
+    args => {
+        %App::BrowserUtils::args_common,
+        %App::BrowserUtils::argopt_periods,
+    },
+};
+sub pause_and_unpause_firefox {
+    App::BrowserUtils::_do_browser('pause_and_unpause', 'firefox', @_);
 }
 
 $SPEC{firefox_has_processes} = {
