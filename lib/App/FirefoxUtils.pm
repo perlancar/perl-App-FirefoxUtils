@@ -117,9 +117,10 @@ sub firefox_is_running {
 
 $SPEC{terminate_firefox} = {
     v => 1.1,
-    summary => "Terminate  (kill -KILL) Firefox",
+    summary => "Terminate Firefox (by default with -KILL signal)",
     args => {
         %App::BrowserUtils::args_common,
+        %App::BrowserUtils::argopt_signal,
     },
 };
 sub terminate_firefox {
