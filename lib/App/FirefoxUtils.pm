@@ -174,6 +174,8 @@ This distribution includes several utilities related to Firefox:
 Some other CLI utilities related to Firefox: L<dump-firefox-history> (from
 L<App::DumpFirefoxHistory>), L<App::FirefoxMultiAccountContainersUtils>.
 
+L<App::BraveUtils>
+
 L<App::ChromeUtils>
 
 L<App::OperaUtils>
