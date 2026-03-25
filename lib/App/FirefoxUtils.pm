@@ -5,10 +5,26 @@ use strict 'subs', 'vars';
 use warnings;
 use Log::ger;
 
+use Exporter qw(import);
+
 # AUTHORITY
 # DATE
 # DIST
 # VERSION
+
+our @EXPORT_OK = qw(
+                       ps_firefox
+                       pause_firefox
+                       unpause_firefox
+                       pause_and_unpause_firefox
+                       firefox_has_processes
+                       firefox_is_paused
+                       firefox_is_running
+                       terminate_firefox
+                       restart_firefox
+                       start_firefox
+                       open_firefox_tabs
+               );
 
 our %SPEC;
 
@@ -155,6 +171,159 @@ $SPEC{start_firefox} = {
 };
 sub start_firefox {
     App::BrowserUtils::start_browsers(@_, start_firefox=>1);
+}
+
+$SPEC{open_firefox_tabs} = {
+    v => 1.1,
+    summary => 'Open a list of Firefox tabs, with options',
+    args => {
+        items => {
+            schema => ['array*', {
+                min_len => 1,
+                of => ['hash*', {
+                    keys => {
+                        url => 'url*',
+                        tags => ['array*', {of=>['str*', min_len=>1]}],
+                        container => 'str*',
+                        include_by_default => ['bool*', default=>1],
+                    },
+                    req_keys => ['url'],
+                }],
+            }],
+            req => 1,
+        },
+        new_window => {
+            schema => 'bool*',
+            cmdline_aliases => {
+                w => {},
+                # W = --no-new-window
+            },
+        },
+        shuffle => {
+            schema => 'bool*',
+        },
+        include_any_tags => {
+            summary => 'Include all items that have any tag specified',
+            schema => ['array*', of=>'str*'],
+        },
+        include_all_tags => {
+            summary => 'Include all items that have ALL tags specified',
+            schema => ['array*', of=>'str*'],
+        },
+        exclude_any_tags => {
+            summary => 'Exclude all items that have any tags specified',
+            schema => ['array*', of=>'str*'],
+        },
+        exclude_all_tags => {
+            summary => 'Exclude all items that have ALL tags specified',
+            schema => ['array*', of=>'str*'],
+        },
+        query => {
+            schema => ['array*', of=>'str*'],
+            pos => 0,
+            slurpy => 1,
+        },
+    },
+    deps => {
+        all => [
+            {prog=>'firefox-container'},
+        ],
+    },
+};
+sub open_firefox_tabs {
+    require IPC::System::Options;
+    require List::Util;
+    require List::Util::Find;
+
+    my %args = @_;
+
+    my $items = $args{items} or return [400, "Please specify items"];
+    @$items or return [400, "Please specify at least one item in items"];
+
+    if ($args{shuffle}) {
+        $items = [List::Util::shuffle(@$items)];
+    }
+
+    my $j = 0;
+  ITEM:
+    for my $i (0 .. $#{$items}) {
+        my $item = $items->[$i];
+        my @ff_args;
+        my $env = {};
+
+        # if not included by default, will be included only if specifically matching a filter
+        my $include_by_default = $item->{include_by_default} // 1;
+
+        my $match_a_filter = 0;
+
+      FILTER: {
+          INCLUDE_ANY_TAGS: {
+                last unless $args{include_any_tags} && @{ $args{include_any_tags} };
+                do { log_debug "Skipping item %s: does not pass include_any_tags %s", $item, $args{include_any_tags}; next ITEM }
+                    unless List::Util::Find::hasanystrs($args{include_any_tags}, @{ $item->{tags} // []});
+                $match_a_filter++;
+            }
+          INCLUDE_ALL_TAGS: {
+                last unless $args{include_all_tags} && @{ $args{include_all_tags} };
+                do { log_debug "Skipping item %s: does not pass include_all_tags %s", $item, $args{include_all_tags}; next ITEM }
+                    unless List::Util::Find::hasallstrs($args{include_all_tags}, @{ $item->{tags} // []});
+                $match_a_filter++;
+            }
+          EXCLUDE_ANY_TAGS: {
+                last unless $args{exclude_any_tags} && @{ $args{exclude_any_tags} };
+                do { log_debug "Skipping item %s: does not pass exclude_any_tags %s", $item, $args{exclude_any_tags}; next ITEM }
+                    if List::Util::Find::hasanystrs($args{exclude_any_tags}, @{ $item->{tags} // []});
+                $match_a_filter++;
+            }
+          EXCLUDE_ALL_TAGS: {
+                last unless $args{exclude_all_tags} && @{ $args{exclude_all_tags} };
+                do { log_debug "Skipping item %s: does not pass exclude_all_tags %s", $item, $args{exclude_all_tags}; next ITEM }
+                    if List::Util::Find::hasallstrs($args{exclude_all_tags}, @{ $item->{tags} // []});
+                $match_a_filter++;
+            }
+          QUERY: {
+                last unless $args{query} && @{ $args{query} };
+                my $match = 0;
+              Q:
+                for my $query (@{ $args{query} }) {
+                    do { $match = 1; last Q }
+                        if $item->{url} =~ /$query/i;
+                    for my $tag (@{ $item->{tags} // [] }) {
+                        do { $match = 1; last Q }
+                            if $tag =~ /$query/i;
+                    }
+                    for my $container ($item->{container} // '') {
+                        do { $match = 1; last Q }
+                            if $container =~ /$query/i;
+                    }
+                }
+                do { log_debug "Skipping item %s: does not pass query %s", $item, $args{query}; next ITEM }
+                    unless $match;
+                $match_a_filter++;
+            } # QUERY
+        } # FILTER
+
+        if (!$include_by_default && !$match_a_filter) {
+            log_debug "Skipping item %s: not included by default and does not match filter(s)", $item;
+            next ITEM;
+        }
+
+        if ($j == 0 && $args{new_window}) {
+            push @ff_args, "--new-window", $item->{url};
+        } else {
+            push @ff_args, $item->{url};
+        }
+        $j++;
+
+        if (defined $item->{container}) {
+            $env->{FIREFOX_CONTAINER} = $item->{container};
+        }
+
+        log_info "Opening tab %d: %s (%s) ...", $j, $item->{url}, (defined $item->{container} ? "container=$item->{container}" : "");
+        IPC::System::Options::system({env=>$env, log=>1}, "firefox-container", @ff_args);
+    }
+
+    [200];
 }
 
 1;
