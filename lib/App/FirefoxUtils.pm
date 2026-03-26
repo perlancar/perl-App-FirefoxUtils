@@ -286,17 +286,33 @@ sub open_firefox_tabs {
                 my $match = 0;
               Q:
                 for my $query (@{ $args{query} }) {
-                    do { $match = 1; last Q }
-                        if $item->{url} =~ /$query/i;
-                    for my $tag (@{ $item->{tags} // [] }) {
+                    my $is_negative; $is_negative = 1 if $query =~ s/\A-//;
+
+                    if ($is_negative) {
                         do { $match = 1; last Q }
-                            if $tag =~ /$query/i;
-                    }
-                    for my $container ($item->{container} // '') {
+                            if $item->{url} =~ /$query/i;
+                        for my $tag (@{ $item->{tags} // [] }) {
+                            do { $match = 1; last Q }
+                                if $tag =~ /$query/i;
+                        }
+                        for my $container ($item->{container} // '') {
+                            do { $match = 1; last Q }
+                                if $container =~ /$query/i;
+                        }
+                    } else {
                         do { $match = 1; last Q }
-                            if $container =~ /$query/i;
+                            if $item->{url} =~ /$query/i;
+                        for my $tag (@{ $item->{tags} // [] }) {
+                            do { $match = 1; last Q }
+                                if $tag =~ /$query/i;
+                        }
+                        for my $container ($item->{container} // '') {
+                            do { $match = 1; last Q }
+                                if $container =~ /$query/i;
+                        }
                     }
                 }
+              L1:
                 do { log_debug "Skipping item %s: does not pass query %s", $item, $args{query}; next ITEM }
                     unless $match;
                 $match_a_filter++;
