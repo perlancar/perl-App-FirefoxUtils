@@ -283,35 +283,30 @@ sub open_firefox_tabs {
             }
           QUERY: {
                 last unless $args{query} && @{ $args{query} };
+                my $num_positive_queries = 0;
+                my $num_negative_queries = 0;
                 my $match = 0;
               Q:
-                for my $query (@{ $args{query} }) {
-                    my $is_negative; $is_negative = 1 if $query =~ s/\A-//;
+                for my $query0 (@{ $args{query} }) {
+                    my ($is_negative, $query) = $query0 =~ /\A(-?)(.*)/;
+                    $num_positive_queries++ if !$is_negative;
+                    $num_negative_queries++ if  $is_negative;
 
-                    if ($is_negative) {
-                        do { $match = 1; last Q }
-                            if $item->{url} =~ /$query/i;
-                        for my $tag (@{ $item->{tags} // [] }) {
-                            do { $match = 1; last Q }
-                                if $tag =~ /$query/i;
-                        }
-                        for my $container ($item->{container} // '') {
-                            do { $match = 1; last Q }
-                                if $container =~ /$query/i;
-                        }
-                    } else {
-                        do { $match = 1; last Q }
-                            if $item->{url} =~ /$query/i;
-                        for my $tag (@{ $item->{tags} // [] }) {
-                            do { $match = 1; last Q }
-                                if $tag =~ /$query/i;
-                        }
-                        for my $container ($item->{container} // '') {
-                            do { $match = 1; last Q }
-                                if $container =~ /$query/i;
+                    if ($item->{url} =~ /$query/i) {
+                        if ($is_negative) { goto L1 } else { $match = 1; last Q }
+                    }
+                    for my $tag (@{ $item->{tags} // [] }) {
+                        if ($tag =~ /$query/i) {
+                            if ($is_negative) { goto L1 } else { $match = 1; last Q }
                         }
                     }
-                }
+                    for my $container ($item->{container} // '') {
+                        if ($container =~ /$query/i) {
+                            if ($is_negative) { goto L1 } else { $match = 1; last Q }
+                        }
+                    }
+                } # for query
+                $match++ if $num_positive_queries == 0;
               L1:
                 do { log_debug "Skipping item %s: does not pass query %s", $item, $args{query}; next ITEM }
                     unless $match;
