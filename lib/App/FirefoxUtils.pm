@@ -176,6 +176,54 @@ sub start_firefox {
 $SPEC{open_firefox_tabs} = {
     v => 1.1,
     summary => 'Open a list of Firefox tabs, with options',
+    description => <<'MARKDOWN',
+
+This utility is best used via Perl or curried after you supply the list of
+items. For example, in script `open-my-tiktok`:
+
+    use App::FirefoxUtils ();
+    use Perinci::CmdLine::Any;
+    use Perinci::Sub::Util qw(gen_curried_sub);
+
+    my @containers = (
+        'account1',
+        'account2',
+        'account3',
+    );
+
+    my @containers_additional = (
+        'account4',
+        'account5',
+    );
+
+    gen_curried_sub(
+        'App::FirefoxUtils::open_firefox_tabs',
+        {
+            items => [
+                (map { +{url=>'https://www.tiktok.com/', container=>$_} } @containers),
+                (map { +{url=>'https://www.tiktok.com/', container=>$_, include_by_default=>0} } @containers_additional),
+            ],
+        },
+        'open_my_tiktok',
+    );
+
+    Perinci::CmdLine::Any->new(
+        url => '/main/open_my_tiktok',
+        log => 1,
+    )->run;
+
+Later on, you run your script:
+
+    # open all items that are included by default
+    % open-my-tiktok
+
+    # only open items that match the queries
+    % open-my-tiktok account2 account3
+
+    # only open items that do not contain 'account4'
+    % open-my-tiktok --new-window --shuffle -- -account4
+
+MARKDOWN
     args => {
         items => {
             schema => ['array*', {
