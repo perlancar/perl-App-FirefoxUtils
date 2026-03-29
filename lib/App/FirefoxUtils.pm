@@ -247,6 +247,11 @@ MARKDOWN
                 # W = --no-new-window
             },
         },
+        kde_activity => {
+            summary => 'Switch to the specified KDE activity',
+            schema => 'str*',
+
+        },
         shuffle => {
             schema => 'bool*',
         },
@@ -287,6 +292,15 @@ sub open_firefox_tabs {
 
     my $items = $args{items} or return [400, "Please specify items"];
     @$items or return [400, "Please specify at least one item in items"];
+
+    if (defined $args{kde_activity}) {
+        require App::KDEActivityUtils;
+        my $res_kde_activity = App::KDEActivityUtils::set_current_kde_activity(
+            name => $args{kde_activity},
+        );
+        return [500, "Can't set current KDE activity: $res_kde_activity->[0] - $res_kde_activity->[1]"]
+            unless $res_kde_activity->[0] == 200;
+    }
 
     if ($args{shuffle}) {
         $items = [List::Util::shuffle(@$items)];
